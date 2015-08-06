@@ -5,6 +5,10 @@ var internalMap = {
   target_id:"target_id"
 }
 
+var selected;
+var selectedData
+var oldFill;
+
 // takes some nodes with targets and creates edges for d3.
 var createEdges = function(nodes){
   var edgesForD3 = [];
@@ -38,10 +42,39 @@ var createEdges = function(nodes){
 
 Nebula = function(svgSelector, width, height, userOnMouseover, data, map){
 
-  var circleRadius = 10;
+  function zoomed() {
+    console.log("Adsf")
+    drawables.attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");
+  }
+
+  function dragstarted(d) {
+    d3.event.sourceEvent.stopPropagation();
+  }
+
+  function dragged(d) {
+    d3.select(this).attr("cx", d.x = d3.event.x).attr("cy", d.y = d3.event.y);
+  }
+
+  function dragended(d) {
+  }
+
+  var onmouseover = function(d){
+    // d.fixed = true;
+
+    if(!!selected){
+      selected.attr("fill", oldFill);
+      // selectedData.fixed = false;
+    }
+
+    oldFill = d3.select(this).attr("fill");
+    selected = d3.select(this);
+    selectedData = d;
+
+    d3.select(this).attr("fill", "yellow");
+    userOnMouseover(d);
+  }
 
   var svg = d3.select(svgSelector);
-
   if(svg.empty())
     return {error:"Selection for provided selector was empty."}
 
@@ -61,36 +94,24 @@ Nebula = function(svgSelector, width, height, userOnMouseover, data, map){
     }
   }
 
-  console.log(internalMap);
+  var zoom = d3.behavior.zoom()
+      .scaleExtent([.2, 2])
+      .on("zoom", zoomed);
+
+  svg.call(zoom);
+
+  var circleRadius = 10;
 
   var edges = createEdges(data);
 
-  var selected;
-  var selectedData
-  var oldFill;
+  var rect = svg.append("rect")
+    .attr("width", width)
+    .attr("height", height)
+    .style("fill", "none")
+    .style("pointer-events", "all");
 
-  var onmouseout = function(d){
-    // d.fixed = false;
-  }
-
-  var onmouseover = function(d){
-    // d.fixed = true;
-
-    if(!!selected){
-      selected.attr("fill", oldFill);
-      // selectedData.fixed = false;
-    }
-
-    oldFill = d3.select(this).attr("fill");
-    selected = d3.select(this);
-    selectedData = d;
-
-    d3.select(this).attr("fill", "yellow");
-    userOnMouseover(d);
-
-  }
-
-
+  var drawables = svg
+    .append("g")
 
   var force = d3.layout.force()
     .linkDistance(80)
@@ -101,20 +122,13 @@ Nebula = function(svgSelector, width, height, userOnMouseover, data, map){
     .links(edges)
     .start()
 
+  var drag = force.drag()
+    .origin(function(d) { return d; })
+    .on("dragstart", dragstarted)
+    .on("drag", dragged)
+    .on("dragend", dragended);
 
-  var dragstart = function(d) {
-    d.fixed = true;
-  }
-
-  var ondoubleclick = function(d) {
-    d.fixed = false;
-  }
-
-  // var drag = force.drag()
-  //   .on("dragstart", dragstart);
-
-
-  var edge = svg.selectAll(".edge")
+  var edge = drawables.selectAll(".edge")
       .data(edges)
     .enter().append("line")
       .attr("class", "edge")
@@ -122,7 +136,7 @@ Nebula = function(svgSelector, width, height, userOnMouseover, data, map){
       .style("stroke-width", 2)
       .attr("marker-end", "url(#Triangle)")
 
-  var node = svg.selectAll(".node")
+  var node = drawables.selectAll(".node")
       .data(data)
     .enter().append("circle")
       .attr("class", "node")
@@ -130,11 +144,9 @@ Nebula = function(svgSelector, width, height, userOnMouseover, data, map){
       .attr("fill", function(d){ if(!d[internalMap["target_id"]]) {return "#666699"} else {return "gray"}})
       .attr("stroke", "black")
       .on("mouseover", onmouseover)
-      .on("mouseout", onmouseout)
-      .on("doubleclick", ondoubleclick)
-      .call(force.drag());
+      .call(drag);
 
-  var arrow = svg.append("defs").append("marker")
+  var arrow = drawables.append("defs").append("marker")
     .attr("id", "Triangle")
     .attr("viewBox", "-10 -10 30 30")
     .attr("markerWidth", "35")
