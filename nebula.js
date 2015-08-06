@@ -7,8 +7,14 @@ var internalMap = {
   value:"value"
 }
 
+var color_standard = "gray";
+var color_commonAuthor = "red";
+var color_original = "#666699";
+var color_selected = "yellow";
+
 var selected;
-var selectedData
+var selectedData;
+var oldCommonAuthors;
 
 var minValue;
 var maxValue;
@@ -77,28 +83,24 @@ Nebula = function(svgSelector, width, height, userOnMouseover, data, map){
 
     if(!!selectedData){
       if(!!selectedData[internalMap["target_id"]])
-        selected.attr("fill", "gray")
+        selected.attr("fill", color_standard)
       else
-        selected.attr("fill", "#666699");
+        selected.attr("fill", color_original);
     }
 
     selected = d3.select(this);
     selectedData = d;
 
-    node
-      .filter(function(n) {return n[internalMap["author"] === d[internalMap["author"]]]})
-      .attr("fill", "red")
-    // console.log(selected);
-    // for(var i = 0; i < data.length; ++i){
-    //
-    //   if(data[i][internalMap["author"]] === d[internalMap["author"]]){
-    //     var n = d3.select(data[i]);
-    //     // if(!n.empty())
-    //       // n.attr("fill", "red");
-    //   }
-    // }
+    if(!!oldCommonAuthors){
+      oldCommonAuthors
+        .attr("fill", function(d){ if(!d[internalMap["target_id"]]) {return color_original} else {return color_standard}})
+    }
 
-    selected.attr("fill", "yellow");
+    oldCommonAuthors = node
+      .filter(function(n) {return n[internalMap["author"]] === d[internalMap["author"]]})
+      .attr("fill", color_commonAuthor)
+
+    selected.attr("fill", color_selected);
     userOnMouseover(d);
   }
 
@@ -169,7 +171,7 @@ Nebula = function(svgSelector, width, height, userOnMouseover, data, map){
     .enter().append("circle")
       .attr("class", "node")
       .attr("r", circleRadius)
-      .attr("fill", function(d){ if(!d[internalMap["target_id"]]) {return "#666699"} else {return "gray"}})
+      .attr("fill", function(d){ if(!d[internalMap["target_id"]]) {return color_original} else {return color_standard}})
       .attr("stroke", "black")
       .on("mouseover", onmouseover)
       .call(drag);
