@@ -9,7 +9,6 @@ var internalMap = {
 
 var selected;
 var selectedData
-var oldFill;
 
 var minValue;
 var maxValue;
@@ -75,18 +74,31 @@ Nebula = function(svgSelector, width, height, userOnMouseover, data, map){
   }
 
   var onmouseover = function(d){
-    // d.fixed = true;
 
-    if(!!selected){
-      selected.attr("fill", oldFill);
-      // selectedData.fixed = false;
+    if(!!selectedData){
+      if(!!selectedData[internalMap["target_id"]])
+        selected.attr("fill", "gray")
+      else
+        selected.attr("fill", "#666699");
     }
 
-    oldFill = d3.select(this).attr("fill");
     selected = d3.select(this);
     selectedData = d;
 
-    d3.select(this).attr("fill", "yellow");
+    node
+      .filter(function(n) {return n[internalMap["author"] === d[internalMap["author"]]]})
+      .attr("fill", "red")
+    // console.log(selected);
+    // for(var i = 0; i < data.length; ++i){
+    //
+    //   if(data[i][internalMap["author"]] === d[internalMap["author"]]){
+    //     var n = d3.select(data[i]);
+    //     // if(!n.empty())
+    //       // n.attr("fill", "red");
+    //   }
+    // }
+
+    selected.attr("fill", "yellow");
     userOnMouseover(d);
   }
 
@@ -158,7 +170,6 @@ Nebula = function(svgSelector, width, height, userOnMouseover, data, map){
       .attr("class", "node")
       .attr("r", circleRadius)
       .attr("fill", function(d){ if(!d[internalMap["target_id"]]) {return "#666699"} else {return "gray"}})
-      // .classed("nebula-original", function(d){return !d[internalMap["target_id"]]})
       .attr("stroke", "black")
       .on("mouseover", onmouseover)
       .call(drag);
