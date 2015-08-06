@@ -2,12 +2,17 @@
 var internalMap = {
   _id:"_id",
   _body:"body",
-  target_id:"target_id"
+  target_id:"target_id",
+  author:"author",
+  value:"value"
 }
 
 var selected;
 var selectedData
 var oldFill;
+
+var minValue;
+var maxValue;
 
 // takes some nodes with targets and creates edges for d3.
 var createEdges = function(nodes){
@@ -34,7 +39,19 @@ var createEdges = function(nodes){
       continue;
 
     edgesForD3.push({source:outerIndex, target:targetIndex});
+
+    if(outerNode.value){
+      if(!minValue)
+        minValue = outerNode.value;
+      if(!maxValue)
+        maxValue = outerNode.value;
+
+      minValue = Math.min(outerNode.value, minValue);
+      maxValue = Math.max(outerNode.value, maxValue);
+    }
+
   }
+
 
   return edgesForD3;
 };
@@ -43,7 +60,6 @@ var createEdges = function(nodes){
 Nebula = function(svgSelector, width, height, userOnMouseover, data, map){
 
   function zoomed() {
-    console.log("Adsf")
     drawables.attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");
   }
 
@@ -142,6 +158,7 @@ Nebula = function(svgSelector, width, height, userOnMouseover, data, map){
       .attr("class", "node")
       .attr("r", circleRadius)
       .attr("fill", function(d){ if(!d[internalMap["target_id"]]) {return "#666699"} else {return "gray"}})
+      // .classed("nebula-original", function(d){return !d[internalMap["target_id"]]})
       .attr("stroke", "black")
       .on("mouseover", onmouseover)
       .call(drag);
@@ -154,8 +171,7 @@ Nebula = function(svgSelector, width, height, userOnMouseover, data, map){
     .attr("orient", "auto");
 
   arrow.append("path")
-    .attr("d", "M -3 0 L -8 -2 L -8 2 z");
-
+    .attr("d", "M -3.5 0 l -6 -2 l 0 4 z");
 
   force.on("tick", function() {
     edge.attr("x1", function(d) { return d.source.x; })

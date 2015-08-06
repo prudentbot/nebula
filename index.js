@@ -10582,7 +10582,8 @@ function go () {
 
       var children = replies.data.children;
       for(var i = 0; i < children.length; ++i){
-
+        if(!children[i].data.body)
+          continue;
         translateRedditRecursive(children[i].data.replies)
         delete children[i].replies;
         children[i].data.parent_id = children[i].data.parent_id.substr(3);
@@ -10643,12 +10644,41 @@ function go () {
 
   var onmouseover = function(data){
     console.log(data);
+    d3.select("#body-text").text(data.body);
+    d3.select("#author-text").text(data.author);
   }
 
   var redditmap = {
     target_id:"parent_id",
     _id:"id"
   }
+
+  var wWidth = window.innerWidth;
+  var wHeight = window.innerHeight;
+
+  var body = d3.select("body");
+
+  body
+    .append("svg")
+      .attr("id", "graph")
+      .attr("width", wWidth * .6)
+      .attr("height", wHeight * .98)
+      .attr("style", "float:right;")
+
+  var infoContainer = body
+    .append("div")
+      .attr("width", wWidth * .4);
+
+  var viewer = infoContainer.append("div")
+    .attr("id", "viewer")
+
+  viewer
+    .append("p")
+      .attr("id", "author-text")
+
+  viewer
+    .append("p")
+      .attr("id", "body-text")
 
   // var nebula = new Nebula("#graph", 800, 600, onmouseover, testdata);
   var nebula = new Nebula("#graph", 800, 600, onmouseover, translateReddit(reddit4), redditmap);
