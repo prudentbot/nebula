@@ -23,7 +23,18 @@ var maxValue;
 var createEdges = function(nodes){
   var edgesForD3 = [];
   for (var outerIndex = 0; outerIndex < nodes.length; ++outerIndex){
+
     var outerNode = nodes[outerIndex];
+
+    if(outerNode[internalMap["value"]]){
+      if(!minValue)
+        minValue = outerNode[internalMap["value"]];
+      if(!maxValue)
+        maxValue = outerNode[internalMap["value"]];
+
+      minValue = Math.min(outerNode[internalMap["value"]], minValue);
+      maxValue = Math.max(outerNode[internalMap["value"]], maxValue);
+    }
 
     if(!outerNode[internalMap["target_id"]])
       continue;
@@ -44,17 +55,6 @@ var createEdges = function(nodes){
       continue;
 
     edgesForD3.push({source:outerIndex, target:targetIndex});
-
-    if(outerNode.value){
-      if(!minValue)
-        minValue = outerNode.value;
-      if(!maxValue)
-        maxValue = outerNode.value;
-
-      minValue = Math.min(outerNode.value, minValue);
-      maxValue = Math.max(outerNode.value, maxValue);
-    }
-
   }
 
 
@@ -102,6 +102,16 @@ Nebula = function(svgSelector, width, height, userOnMouseover, data, map){
 
     selected.attr("fill", color_selected);
     userOnMouseover(d);
+  }
+
+  var calculateRadius = function(d){
+      console.log(minValue);
+      console.log(maxValue);
+      if(d[internalMap["value"]]){
+        return (20 * ((d[internalMap["value"]] - minValue) / (maxValue - minValue))) + 10;
+      }
+      else
+        return 10;
   }
 
   var svg = d3.select(svgSelector);
@@ -170,7 +180,7 @@ Nebula = function(svgSelector, width, height, userOnMouseover, data, map){
       .data(data)
     .enter().append("circle")
       .attr("class", "node")
-      .attr("r", circleRadius)
+      .attr("r", calculateRadius)
       .attr("fill", function(d){ if(!d[internalMap["target_id"]]) {return color_original} else {return color_standard}})
       .attr("stroke", "black")
       .on("mouseover", onmouseover)

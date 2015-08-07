@@ -10599,6 +10599,7 @@ function go () {
     else
       first.body = first.url
 
+    delete first.score;
     a.push(first);
 
     translateRedditRecursive(linkJSON[1]);
@@ -10650,7 +10651,8 @@ function go () {
 
   var redditmap = {
     target_id:"parent_id",
-    _id:"id"
+    _id:"id",
+    value:"score"
   }
 
   var wWidth = window.innerWidth;
