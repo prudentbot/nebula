@@ -19,6 +19,12 @@ var oldCommonAuthors;
 var minValue;
 var maxValue;
 
+var createEdge = function(n, nodes){
+  for(var i = 0; i < nodes.length; ++i){
+
+  }
+}
+
 // takes some nodes with targets and creates edges for d3.
 var createEdges = function(nodes){
   var edgesForD3 = [];
@@ -76,9 +82,6 @@ Nebula = function(svgSelector, width, height, userOnMouseover, data, map){
     d3.select(this).attr("cx", d.x = d3.event.x).attr("cy", d.y = d3.event.y);
   }
 
-  function dragended(d) {
-  }
-
   var onmouseover = function(d){
 
     if(!!selectedData){
@@ -105,8 +108,6 @@ Nebula = function(svgSelector, width, height, userOnMouseover, data, map){
   }
 
   var calculateRadius = function(d){
-      console.log(minValue);
-      console.log(maxValue);
       if(d[internalMap["value"]]){
         return (20 * ((d[internalMap["value"]] - minValue) / (maxValue - minValue))) + 10;
       }
@@ -129,7 +130,7 @@ Nebula = function(svgSelector, width, height, userOnMouseover, data, map){
       }
     }
     catch(e){
-      console.log(e);
+      console.err(e);
       return {error:"Bad map provided"}
     }
   }
@@ -139,8 +140,6 @@ Nebula = function(svgSelector, width, height, userOnMouseover, data, map){
       .on("zoom", zoomed);
 
   svg.call(zoom);
-
-  var circleRadius = 10;
 
   var edges = createEdges(data);
 
@@ -165,8 +164,7 @@ Nebula = function(svgSelector, width, height, userOnMouseover, data, map){
   var drag = force.drag()
     .origin(function(d) { return d; })
     .on("dragstart", dragstarted)
-    .on("drag", dragged)
-    .on("dragend", dragended);
+    .on("drag", dragged);
 
   var edge = drawables.selectAll(".edge")
       .data(edges)
@@ -177,7 +175,7 @@ Nebula = function(svgSelector, width, height, userOnMouseover, data, map){
       .attr("marker-end", "url(#Triangle)")
 
   var node = drawables.selectAll(".node")
-      .data(data)
+      .data(data, function(d){return d[internalMap["_id"]];})
     .enter().append("circle")
       .attr("class", "node")
       .attr("r", calculateRadius)
@@ -194,20 +192,49 @@ Nebula = function(svgSelector, width, height, userOnMouseover, data, map){
     .attr("orient", "auto");
 
   arrow.append("path")
-    .attr("d", "M -3.5 0 l -6 -2 l 0 4 z");
+    .attr("d", "M .5 0 l -6 -2 l 0 4 z");
+
+  var calculateIntersectionX = function(d){
+    var theta = Math.atan2(d.source.y - d.target.y, d.source.x - d.target.x);
+    return d.target.x + calculateRadius(d.target) * Math.cos(theta);
+  }
+
+  var calculateIntersectionY = function(d){
+    var theta = Math.atan2(d.source.y - d.target.y, d.source.x - d.target.x);
+    return d.target.y + calculateRadius(d.target) * Math.sin(theta);
+  }
 
   force.on("tick", function() {
     edge.attr("x1", function(d) { return d.source.x; })
         .attr("y1", function(d) { return d.source.y; })
-        .attr("x2", function(d) { return d.target.x; })
-        .attr("y2", function(d) { return d.target.y; });
+        .attr("x2", calculateIntersectionX)
+        .attr("y2", calculateIntersectionY);
 
     node.attr("cx", function(d) { return d.x; })
         .attr("cy", function(d) { return d.y; });
   });
 
 
+  var addNode = function(newNode){
+    data.push(newNode);
+    node = drawables.selectAll(".node")
+        .data(data)
+      .enter().append("circle")
+        .attr("class", "node")
+        .attr("r", calculateRadius)
+        .attr("fill", function(d){ if(!d[internalMap["target_id"]]) {return color_original} else {return color_standard}})
+        .attr("stroke", "black")
+        .on("mouseover", onmouseover)
+        .call(drag);
+
+    force
+      .nodes(data)
+      .start()
+
+  }
+
   var result = {};
+  result.add = addNode;
 
   return result;
 }

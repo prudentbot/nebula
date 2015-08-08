@@ -10683,5 +10683,5 @@ function go () {
       .attr("id", "body-text")
 
   // var nebula = new Nebula("#graph", 800, 600, onmouseover, testdata);
-  var nebula = new Nebula("#graph", 800, 600, onmouseover, translateReddit(reddit4), redditmap);
+  nebula = new Nebula("#graph", 800, 600, onmouseover, translateReddit(reddit4), redditmap);
 }
