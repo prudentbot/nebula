@@ -19,10 +19,16 @@ var oldCommonAuthors;
 var minValue;
 var maxValue;
 
-var createEdge = function(n, nodes){
-  for(var i = 0; i < nodes.length; ++i){
+var createEdge = function(n, nodes, sourceIndex){
 
+  if(!n[internalMap["target_id"]])
+    return null;
+
+  for(var i = 0; i < nodes.length; ++i){
+    if (n[internalMap["target_id"]] === nodes[i][internalMap["_id"]])
+      return {source:sourceIndex, target:i}
   }
+  return null;
 }
 
 // takes some nodes with targets and creates edges for d3.
@@ -42,33 +48,36 @@ var createEdges = function(nodes){
       maxValue = Math.max(outerNode[internalMap["value"]], maxValue);
     }
 
-    if(!outerNode[internalMap["target_id"]])
-      continue;
-
-    var targetIndex = -1;
-
-    for (var innerIndex = 0; innerIndex < nodes.length; ++innerIndex){
-      var innerNode = nodes[innerIndex];
-
-      if (outerNode[internalMap["target_id"]] === innerNode[internalMap["_id"]]){
-        targetIndex = innerIndex;
-        break;
-      }
-    };
-
-    // if target_id has no corresponding target
-    if(targetIndex === -1)
-      continue;
-
-    edgesForD3.push({source:outerIndex, target:targetIndex});
+    var e;
+    if(e = createEdge(outerNode, nodes, outerIndex))
+      edgesForD3.push(e);
   }
-
 
   return edgesForD3;
 };
 
 
 Nebula = function(svgSelector, width, height, userOnMouseover, data, map){
+
+  var calculateIntersectionX = function(d){
+    var theta = Math.atan2(d.source.y - d.target.y, d.source.x - d.target.x);
+    return d.target.x + calculateRadius(d.target) * Math.cos(theta);
+  }
+
+  var calculateIntersectionY = function(d){
+    var theta = Math.atan2(d.source.y - d.target.y, d.source.x - d.target.x);
+    return d.target.y + calculateRadius(d.target) * Math.sin(theta);
+  }
+
+  var tick = function() {
+    edge.attr("x1", function(d) { return d.source.x; })
+        .attr("y1", function(d) { return d.source.y; })
+        .attr("x2", calculateIntersectionX)
+        .attr("y2", calculateIntersectionY);
+
+    node.attr("cx", function(d) { return d.x; })
+        .attr("cy", function(d) { return d.y; });
+  }
 
   function zoomed() {
     drawables.attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");
@@ -141,6 +150,7 @@ Nebula = function(svgSelector, width, height, userOnMouseover, data, map){
 
   svg.call(zoom);
 
+  var nodes = data;
   var edges = createEdges(data);
 
   var rect = svg.append("rect")
@@ -152,37 +162,28 @@ Nebula = function(svgSelector, width, height, userOnMouseover, data, map){
   var drawables = svg
     .append("g")
 
+  var lineGroup = drawables.append("g")
+    .attr("id", "Nebula-edges");
+
+  var circleGroup = drawables.append("g")
+    .attr("id", "Nebula-nodes");
+
   var force = d3.layout.force()
+    .nodes(nodes)
+    .links(edges)
     .linkDistance(80)
     .charge(-160)
     .gravity(.05)
     .size([width, height])
-    .nodes(data)
-    .links(edges)
-    .start()
+    .on("tick", tick)
 
   var drag = force.drag()
     .origin(function(d) { return d; })
     .on("dragstart", dragstarted)
     .on("drag", dragged);
 
-  var edge = drawables.selectAll(".edge")
-      .data(edges)
-    .enter().append("line")
-      .attr("class", "edge")
-      .attr("stroke", "black")
-      .style("stroke-width", 2)
-      .attr("marker-end", "url(#Triangle)")
-
-  var node = drawables.selectAll(".node")
-      .data(data, function(d){return d[internalMap["_id"]];})
-    .enter().append("circle")
-      .attr("class", "node")
-      .attr("r", calculateRadius)
-      .attr("fill", function(d){ if(!d[internalMap["target_id"]]) {return color_original} else {return color_standard}})
-      .attr("stroke", "black")
-      .on("mouseover", onmouseover)
-      .call(drag);
+  var node = circleGroup.selectAll("*");
+  var edge = lineGroup.selectAll("*");
 
   var arrow = drawables.append("defs").append("marker")
     .attr("id", "Triangle")
@@ -194,44 +195,40 @@ Nebula = function(svgSelector, width, height, userOnMouseover, data, map){
   arrow.append("path")
     .attr("d", "M .5 0 l -6 -2 l 0 4 z");
 
-  var calculateIntersectionX = function(d){
-    var theta = Math.atan2(d.source.y - d.target.y, d.source.x - d.target.x);
-    return d.target.x + calculateRadius(d.target) * Math.cos(theta);
+
+  var start = function(){
+    edge = edge.data(edges);
+    edge.enter().append("line")
+      .attr("class", "edge")
+      .attr("stroke", "black")
+      .style("stroke-width", 2)
+      .attr("marker-end", "url(#Triangle)")
+
+    edge.exit().remove();
+
+    node = node.data(nodes, function(d) { return d[internalMap["_id"]];});
+    node.enter().append("circle")
+      .attr("class", "node")
+      .attr("r", calculateRadius)
+      .attr("fill", function(d){if(!d[internalMap["target_id"]]) {return color_original} else {return color_standard}})
+      .attr("stroke", "black")
+      .on("mouseover", onmouseover)
+      .call(drag);
+
+    node.exit().remove();
+
+    force.start();
   }
-
-  var calculateIntersectionY = function(d){
-    var theta = Math.atan2(d.source.y - d.target.y, d.source.x - d.target.x);
-    return d.target.y + calculateRadius(d.target) * Math.sin(theta);
-  }
-
-  force.on("tick", function() {
-    edge.attr("x1", function(d) { return d.source.x; })
-        .attr("y1", function(d) { return d.source.y; })
-        .attr("x2", calculateIntersectionX)
-        .attr("y2", calculateIntersectionY);
-
-    node.attr("cx", function(d) { return d.x; })
-        .attr("cy", function(d) { return d.y; });
-  });
-
 
   var addNode = function(newNode){
-    data.push(newNode);
-    node = drawables.selectAll(".node")
-        .data(data)
-      .enter().append("circle")
-        .attr("class", "node")
-        .attr("r", calculateRadius)
-        .attr("fill", function(d){ if(!d[internalMap["target_id"]]) {return color_original} else {return color_standard}})
-        .attr("stroke", "black")
-        .on("mouseover", onmouseover)
-        .call(drag);
-
-    force
-      .nodes(data)
-      .start()
-
+    nodes.push(newNode);
+    var newEdge = createEdge(newNode, nodes, nodes.length - 1)
+    if(newEdge)
+      edges.push(newEdge)
+    start();
   }
+
+  start();
 
   var result = {};
   result.add = addNode;
