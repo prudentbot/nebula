@@ -228,10 +228,32 @@ Nebula = function(svgSelector, width, height, userOnMouseover, data, map){
     start();
   }
 
+  var removeNode = function(_id){
+    var result;
+    for(var i = 0; i < nodes.length; ++i){
+      if(nodes[i][internalMap["_id"]] === _id){
+        result = nodes[i];
+        nodes.splice(i, 1);
+        break;
+      }
+    }
+    for(var i = 0; i < edges.length; ){
+      var e = edges[i];
+      if(e.source[internalMap["_id"]] === _id || e.target[internalMap["_id"]] === _id)
+        edges.splice(i, 1);
+      else
+        ++i;
+    }
+    if(!!result)
+      start();
+    return result;
+  }
+
   start();
 
   var result = {};
-  result.add = addNode;
+  result.addNode = addNode;
+  result.removeNode = removeNode;
 
   return result;
 }
