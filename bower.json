@@ -30,6 +30,10 @@
     "test",
     "tests"
   ],
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/prudentbot/nebula.git"
+  },
   "dependencies": {
     "d3": "~3.5.6"
   }
