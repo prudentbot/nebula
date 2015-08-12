@@ -1,0 +1,36 @@
+{
+  "name": "nebula",
+  "main": "nebula.js",
+  "version": "0.0.1",
+  "homepage": "https://github.com/prudentbot/nebula",
+  "authors": [
+    "Tyler Smith <tylsmith@gmail.com>"
+  ],
+  "description": "a library for representing nested comment trees as force-directed graphs",
+  "moduleType": [
+    "globals"
+  ],
+  "keywords": [
+    "d3",
+    "force",
+    "directed",
+    "graph",
+    "layout",
+    "nested",
+    "comments",
+    "nebula",
+    "acyclic"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "public/components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "d3": "~3.5.6"
+  }
+}
