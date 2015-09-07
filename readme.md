@@ -12,4 +12,63 @@ Really, it's just a wrapper around the d3 force-directed graph layout, but it ma
 
 [There's a project ready-made for testing it here](https://github.com/prudentbot/reddit-nebula)
 
-This is all very much work-in-progress.  Documentation on how to use it is coming soon.  Currently very open to opinions/suggestions for the overall design.
+# Example
+
+```javascript
+  // Our data
+  var nodes = [
+    {
+      _id:0,
+      target_id:undefined,
+      value:1,
+      author:"me",
+      body:"first!"
+    },
+    {
+      _id:1,
+      target_id:0,
+      value:2,
+      author:"you",
+      body:"second",
+      extradata:"asdfasdf"
+    }
+  ]
+
+  // Preparation
+  var width = 800;
+  var height = 600;
+
+  var body = d3.select("body");
+
+  body
+    .append("svg")
+      .attr("id", "graph")
+      .attr("width", width)
+      .attr("height", height);
+
+  var infoContainer = body
+    .append("div")
+      .attr("width", wWidth * .4);
+      
+  var onmouseover = function(d){
+    console.log(d);
+    //node's information is logged
+  }
+  
+  //actually initialize the graph
+  nebula = new Nebula("#graph", width, height, onmouseover, nodes);
+  
+  var newNode = {
+      _id:3,
+      target_id:0,
+      value:1,
+      author:"you",
+      body:"third"
+  },
+
+  //adds a new node to the graph.
+  nebula.addNode(newNode);
+  
+  //removes the node with id 1
+  nebula.removeNode(1);
+```
