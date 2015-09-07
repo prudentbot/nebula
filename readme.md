@@ -46,10 +46,6 @@ Really, it's just a wrapper around the d3 force-directed graph layout, but it ma
       .attr("width", width)
       .attr("height", height);
 
-  var infoContainer = body
-    .append("div")
-      .attr("width", wWidth * .4);
-      
   var onmouseover = function(d){
     console.log(d);
     //node's information is logged
