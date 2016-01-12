@@ -1,4 +1,3 @@
-
 var internalMap = {
   _id:"_id",
   _body:"body",
@@ -6,11 +5,6 @@ var internalMap = {
   author:"author",
   value:"value"
 }
-
-var color_standard = "gray";
-var color_commonAuthor = "red";
-var color_original = "#666699";
-var color_selected = "yellow";
 
 var selected;
 var selectedData;
@@ -92,12 +86,11 @@ Nebula = function(svgSelector, width, height, userOnMouseover, data, map){
   }
 
   var onmouseover = function(d){
-
     if(!!selectedData){
       if(!!selectedData[internalMap["target_id"]])
-        selected.attr("fill", color_standard)
+        selected.attr("class", "color_standard")
       else
-        selected.attr("fill", color_original);
+        selected.attr("class", "color_original");
     }
 
     selected = d3.select(this);
@@ -105,14 +98,15 @@ Nebula = function(svgSelector, width, height, userOnMouseover, data, map){
 
     if(!!oldCommonAuthors){
       oldCommonAuthors
-        .attr("fill", function(d){ if(!d[internalMap["target_id"]]) {return color_original} else {return color_standard}})
+        .attr("class", function(d){ if(!d[internalMap["target_id"]]) {return "color_original"} else {return "color_standard"}})
     }
 
     oldCommonAuthors = node
       .filter(function(n) {return n[internalMap["author"]] === d[internalMap["author"]]})
-      .attr("fill", color_commonAuthor)
+      .attr("class", "color_commonAuthor")
 
-    selected.attr("fill", color_selected);
+      selected.attr("class", "color_selected");
+
     userOnMouseover(d);
   }
 
@@ -197,6 +191,7 @@ Nebula = function(svgSelector, width, height, userOnMouseover, data, map){
 
 
   var start = function(){
+    console.log(document.styleSheets[0]);
     edge = edge.data(edges);
     edge.enter().append("line")
       .attr("class", "edge")
@@ -207,10 +202,11 @@ Nebula = function(svgSelector, width, height, userOnMouseover, data, map){
     edge.exit().remove();
 
     node = node.data(nodes, function(d) { return d[internalMap["_id"]];});
+    console.log(nodes);
     node.enter().append("circle")
       .attr("class", "node")
       .attr("r", calculateRadius)
-      .attr("fill", function(d){if(!d[internalMap["target_id"]]) {return color_original} else {return color_standard}})
+      .attr("class", function(d){if(!d[internalMap["target_id"]]) {return "color_original"} else {return "color_standard"}})
       .attr("stroke", "black")
       .on("mouseover", onmouseover)
       .call(drag);
