@@ -1,7 +1,7 @@
 {
   "name": "nebula",
   "main": "nebula.js",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "homepage": "https://github.com/prudentbot/nebula",
   "authors": [
     "Tyler Smith <tylsmith@gmail.com>"
