@@ -90,7 +90,8 @@ var redditNode = {
   parent_id: "41k93d",
   score: 42,
   author: "gammaplay"
-  body: "http://i.imgur.com/LawFIZO.gifv"
+  body: "http://i.imgur.com/LawFIZO.gifv",
+  extradata:"doesn't matter"
 }
 ```
 Should have a corresponding map that looks like this, which should be fed to the Nebula call as the last argument.
