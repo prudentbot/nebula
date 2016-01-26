@@ -104,3 +104,5 @@ Should have a corresponding map that looks like this, which should be fed to the
   
   nebula = new Nebula("#graph", width, height, onmouseover, nodes);
 ```
+
+And then everything should work as desired.
