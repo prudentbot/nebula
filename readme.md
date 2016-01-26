@@ -68,3 +68,39 @@ Really, it's just a wrapper around the d3 force-directed graph layout, but it ma
   //removes the node with id 1
   nebula.removeNode(1);
 ```
+## Mapping
+
+Internally, Nebula is doing all its operations on data that looks like this.
+
+```
+var newNode = {
+    _id:3,
+    target_id:0,
+    value:1,
+    author:"you",
+    body:"third"
+}
+```
+
+However, not everyone's data is going to follow this specific naming convention.  To address this, Nebula allows you to give it a mapping object which maps the Nebula-internal attribute names to your attribute names.  For example, data that looks like this:
+
+```
+var redditNode = {
+  id: "41k93c",
+  parent_id: "41k93d",
+  score: 42,
+  author: "gammaplay"
+  body: "http://i.imgur.com/LawFIZO.gifv"
+}
+```
+Should have a corresponding map that looks like this, which should be fed to the Nebula call as the last argument.
+
+```
+  var redditmap = {
+    target_id:"parent_id",
+    _id:"id",
+    value:"score"
+  }
+  
+  nebula = new Nebula("#graph", width, height, onmouseover, nodes);
+```
